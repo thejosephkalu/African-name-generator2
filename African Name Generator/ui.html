@@ -1,0 +1,163 @@
+<style>
+  body {
+    font-family: "Inter", sans-serif;
+    padding: 20px;
+    background-color: #f0f0f0;
+    color: #333;
+  }
+  .container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  h2 {
+    margin-top: 0;
+    color: #3d7928;
+  }
+  select,
+  button {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  button {
+    background-color: #3d7928;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #155db1;
+  }
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  #result {
+    margin-top: 20px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e8f0fe;
+    border-radius: 4px;
+  }
+  .button-group {
+    display: flex;
+    gap: 10px;
+  }
+  .button-group button {
+    flex: 1;
+  }
+  #message {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+  .success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  .error {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+</style>
+
+<div class="container">
+  <h2>African Name Generator</h2>
+
+  <select id="country">
+    <option value="Nigeria">Nigeria</option>
+    <option value="Kenya">Kenya</option>
+    <option value="Ghana">Ghana</option>
+    <option value="SouthAfrica">SouthAfrica</option>
+    <option value="Ethiopia">Ethiopia</option>
+    <option value="Egypt">Egypt</option>
+    <option value="Senegal">Senegal</option>
+    <option value="Uganda">Uganda</option>
+    <option value="Tanzania">Tanzania</option>
+    <option value="Morocco">Morocco</option>
+    <option value="Cameroon">Cameroon</option>
+  </select>
+
+  <select id="gender">
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+    <option value="both">Both</option>
+  </select>
+
+  <select id="nameType">
+    <option value="first">First Name Only</option>
+    <option value="last">Last Name Only</option>
+    <option value="full">Full Name</option>
+  </select>
+
+  <div class="button-group">
+    <button id="generate">Generate Name</button>
+    <button id="insert" disabled>Insert Name</button>
+  </div>
+
+  <div id="result"></div>
+  <div id="message"></div>
+</div>
+
+<script>
+  let generatedName = "";
+
+  document.getElementById("generate").onclick = () => {
+    const country = document.getElementById("country").value;
+    const gender = document.getElementById("gender").value;
+    const nameType = document.getElementById("nameType").value;
+
+    let selectedGender = gender;
+    if (gender === "both") {
+      selectedGender = Math.random() < 0.5 ? "male" : "female";
+    }
+
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "generate-name",
+          country,
+          gender: selectedGender,
+          nameType,
+        },
+      },
+      "*"
+    );
+  };
+
+  document.getElementById("insert").onclick = () => {
+    if (generatedName) {
+      parent.postMessage(
+        { pluginMessage: { type: "insert-name", name: generatedName } },
+        "*"
+      );
+    }
+  };
+
+  onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (msg.type === "name-generated") {
+      generatedName = msg.name;
+      document.getElementById(
+        "result"
+      ).textContent = `Generated Name: ${msg.name}`;
+      document.getElementById("insert").disabled = false;
+      document.getElementById("message").textContent = "";
+      document.getElementById("message").className = "";
+    } else if (msg.type === "success") {
+      document.getElementById("message").textContent = msg.message;
+      document.getElementById("message").className = "success";
+    } else if (msg.type === "error") {
+      document.getElementById("message").textContent = msg.message;
+      document.getElementById("message").className = "error";
+    }
+  };
+</script>
